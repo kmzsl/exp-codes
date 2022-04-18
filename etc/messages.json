@@ -1,0 +1,46 @@
+{
+    "add": {
+        "json_message": {"ok":{"type": 200, "message": "Key Added"}},
+        "http_answer": "HTTP/1.1 200 OK"
+    },
+    "update": {
+        "json_message": {"ok":{"type": 200, "message": "Key updated"}},
+        "http_answer": "HTTP/1.1 200 OK"
+    },
+    "delete": {
+        "json_message": {"ok":{"type": 200, "message": "Key deleted"}},
+        "http_answer": "HTTP/1.1 200 OK"
+    },
+    "exists": {
+        "json_message": {"error":{"type": 409, "message": "Key already exists"}},
+        "http_answer": "HTTP/1.1 409 Conflict"
+    },
+    "notfound": {
+        "json_message": {"error":{"type": 200, "message": "Not Found"}},
+        "http_answer": "HTTP/1.1 200 OK"
+    },
+    "notallowed": {
+        "json_message": {"error":{"type": 405, "message": "Method Not Allowed"}},
+        "http_answer": "HTTP/1.1 405 Method Not Allowed"
+    },
+    "jsonerror": {
+        "json_message": {"error":{"type": 200, "message": "Json format error"}},
+        "http_answer": "HTTP/1.1 200 OK"
+    },
+    "jsondecode": {
+        "json_message": {"error":{"type": 200, "message": "Json decode error"}},
+        "http_answer": "HTTP/1.1 200 OK"
+    },
+    "nokey": {
+        "json_message": {"error":{"type": 400, "message": "You forgot enter a key"}},
+        "http_answer": "HTTP/1.1 400 Bad Request"
+    },
+    "badhttp": {
+        "json_message": {"error":{"type": 400, "message": "Bad request"}},
+        "http_answer": "HTTP/1.1 400 Bad Request"
+    },
+    "many": {
+        "json_message": {"error":{"type": 429, "message": "Retry after 1000 ms"}},
+        "http_answer": "HTTP/1.1 429 Too Many Requests"
+    }
+}
