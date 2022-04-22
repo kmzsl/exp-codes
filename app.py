@@ -6,7 +6,6 @@ sys.path.append(lib_path + '/libs')
 
 from StorageHttp import StorageHttp
 from StorageMemory import StorageMemory
-from StorageLog import StorageLog
 
 if __name__ == '__main__':
     app = StorageHttp()
