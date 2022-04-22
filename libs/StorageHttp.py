@@ -5,7 +5,10 @@ import json
 import sys
 import os
 import time as t
+from loguru import logger
 
+logger.add("/tmp/storage.log", format="{time} {level} {message}",
+        level="DEBUG", rotation="100 MB", compression="zip")
 
 class HttpHeaders():
 
@@ -40,7 +43,7 @@ class StorageHttp:
             self.selector.register(
                 fileobj=client, events=selectors.EVENT_READ, data=self._recv)
         else:
-            self.log.write("WARNING", f"Too Many Requests, droped {addr}")
+            logger.info(f"Too Many Requests, droped {addr}")
             http_answer = self._http_answers("many")
             client.send(http_answer.encode())
             client.close()
@@ -71,14 +74,12 @@ class StorageHttp:
         key, value = data_from_json["key"], json.dumps(data_from_json["value"])
 
         if self.storage.exists(key):
-            self.log.write(
-                "WARNING", f"[{headers.remoteaddr}] key = {key} exists")
+            logger.info(f"[{headers.remoteaddr}] key = {key} exists")
             http_answer = self._http_answers("exists")
             client_socket.send(http_answer.encode())
         else:
             self.storage.add(key, value)
-            self.log.write(
-                "INFO", f"[{headers.remoteaddr}] key = {key} added")
+            logger.info(f"[{headers.remoteaddr}] key = {key} added")
             http_answer = self._http_answers("add")
             client_socket.send(http_answer.encode())
 
@@ -91,13 +92,11 @@ class StorageHttp:
 
         if self.storage.exists(key):
             self.storage.update(key, value)
-            self.log.write(
-                "INFO", f"[{headers.remoteaddr}] key = {key} updated")
+            logger.info(f"[{headers.remoteaddr}] key = {key} updated")
             http_answer = self._http_answers("update")
             client_socket.send(http_answer.encode())
         else:
-            self.log.write(
-                "WARNING", f"[{headers.remoteaddr}] key = {key} not found")
+            logger.info(f"[{headers.remoteaddr}] key = {key} not found")
             http_answer = self._http_answers("notfound")
             client_socket.send(http_answer.encode())
 
@@ -110,8 +109,7 @@ class StorageHttp:
 
             client_socket.send(http_answer.encode())
         else:
-            self.log.write(
-                "WARNING", f"[{headers.remoteaddr}] key = {key} not found")
+            logger.info(f"[{headers.remoteaddr}] key = {key} not found")
             http_answer = self._http_answers("notfound")
             client_socket.send(http_answer.encode())
 
@@ -119,13 +117,11 @@ class StorageHttp:
 
         if self.storage.exists(key):
             self.storage.delete(key)
-            self.log.write(
-                "INFO", f"[{headers.remoteaddr}] key = {key} deleted")
+            logger.info(f"[{headers.remoteaddr}] key = {key} deleted")
             http_answer = self._http_answers("delete")
             client_socket.send(http_answer.encode())
         else:
-            self.log.write(
-                "WARNING", f"[{headers.remoteaddr}] key = {key} not found")
+            logger.info(f"[{headers.remoteaddr}] key = {key} not found")
             http_answer = self._http_answers("notfound")
             client_socket.send(http_answer.encode())
 
@@ -202,29 +198,25 @@ class StorageHttp:
 
         except json.decoder.JSONDecodeError:
 
-            self.log.write(
-                "ERROR", f"[{headers.remoteaddr}] Json decode error")
+            logger.error(f"[{headers.remoteaddr}] Json decode error")
             http_answer = self._http_answers("jsondecode")
             client_socket.send(http_answer.encode())
 
         except KeyError:
 
-            self.log.write(
-                "ERROR", f"[{headers.remoteaddr}] Json format error")
+            logger.error(f"[{headers.remoteaddr}] Json format error")
             http_answer = self._http_answers("jsonerror")
             client_socket.send(http_answer.encode())
 
         except (ValueError, AttributeError):
 
-            self.log.write(
-                "ERROR", f"[{headers.remoteaddr}] bad request")
+            logger.error(f"[{headers.remoteaddr}] bad request")
             http_answer = self._http_answers("badhttp")
             client_socket.send(http_answer.encode())
 
         except OSError:
 
-            self.log.write(
-                "DEBUG", "connection abort")
+            logger.debug("connection abort")
 
         finally:
 
@@ -288,8 +280,7 @@ class StorageHttp:
                 http_method = self._get_http_method(headers.method)
                 http_method(client_socket, headers)
             else:
-                self.log.write(
-                    "WARNING", f"[{headers.remoteaddr}] [{headers.uri}] Not Found")
+                logger.info(f"[{headers.remoteaddr}] [{headers.uri}] Not Found")
                 http_answer = self._http_answers("notfound")
                 client_socket.send(http_answer.encode())
 
@@ -299,18 +290,15 @@ class StorageHttp:
                     http_method = self._get_http_method(headers.method)
                     http_method(client_socket, uri_params[1], headers)
                 else:
-                    self.log.write(
-                        "ERROR", f"[{headers.remoteaddr}] [{headers.uri}] forgot enter a key")
+                    logger.info(f"[{headers.remoteaddr}] [{headers.uri}] forgot enter a key")
                     http_answer = self._http_answers("nokey")
                     client_socket.send(http_answer.encode())
             else:
-                self.log.write(
-                    "WARNING", f"[{headers.remoteaddr}] [{headers.uri}] Not Found")
+                logger.info(f"[{headers.remoteaddr}] [{headers.uri}] Not Found")
                 http_answer = self._http_answers("notfound")
                 client_socket.send(http_answer.encode())
         else:
-            self.log.write(
-                "WARNING", f"[{headers.remoteaddr}] [{headers.method}] Method Not Allowed")
+            logger.info(f"[{headers.remoteaddr}] [{headers.method}] Method Not Allowed")
             http_answer = self._http_answers("notallowed")
             client_socket.send(http_answer.encode())
 
@@ -343,8 +331,7 @@ class StorageHttp:
             http_json_message = json.dumps(self.http_messages[code]["json_message"])
             http_answer_template = f"{self.http_messages[code]['http_answer']}\nContent-Type: application/json\nContent-Length: {len(http_json_message)}\n\n{http_json_message}\n"
         except KeyError:
-            self.log.write(
-                "WARNING", f"rule [{code}] Not Found")
+            logger.info(f"rule [{code}] Not Found")
             http_json_message = json.dumps(
                 {"error": {"type": 500, "message": "Internal Server error"}}
             )

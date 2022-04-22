@@ -11,5 +11,4 @@ from StorageLog import StorageLog
 if __name__ == '__main__':
     app = StorageHttp()
     app.set_property('storage', StorageMemory())
-    app.set_property('log', StorageLog())
     app.event_loop()
